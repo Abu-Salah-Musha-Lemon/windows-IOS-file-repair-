@@ -1,10 +1,10 @@
 @echo off
-title Smart Windows Update & System Health Cleanup
+title Smart Windows Update and System Health Cleanup
 cls
 
 :: ---------[ Header Information ]---------
 echo =============================================================
-echo        Smart Windows Update & System Health Cleanup
+echo        Smart Windows Update and System Health Cleanup
 echo =============================================================
 echo  Script Name : Smart-WindowsUpdate-Cleanup.bat
 echo  Author      : Abu Salah Musha Lemon
