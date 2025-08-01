@@ -1,15 +1,6 @@
 @echo off
-     Smart Windows Update & System Health Cleanup
+title Smart Windows Update & System Health Cleanup
 cls
-
-:: -------------------------------------------------------------------
-:: Script Name   : Smart-WindowsUpdate-Cleanup.bat
-:: Author        : Abu Salah Musha Lemon
-:: Description   : Runs system health checks (DISM/SFC), cleans update
-::                 temp files, and performs disk cleanup safely.
-:: Created Date  : 2025-08-01
-:: Version       : 1.0
-:: -------------------------------------------------------------------
 
 :: ---------[ Header Information ]---------
 echo =============================================================
@@ -33,77 +24,69 @@ IF %ERRORLEVEL% NEQ 0 (
     exit /b
 )
 
-echo ============================================================
+:: ---------[ 1. DISM - CheckHealth ]---------
+echo =============================================================
 echo [1/8] QUICK CHECK - DISM /CheckHealth
-echo ============================================================
+echo =============================================================
 DISM /Online /Cleanup-Image /CheckHealth
-IF %ERRORLEVEL% EQU 0 (
-    echo ✔ No corruption detected.
-) ELSE (
-    echo ⚠ Potential corruption found.
-)
 
+:: ---------[ 2. DISM - ScanHealth ]---------
 echo.
-echo ============================================================
+echo =============================================================
 echo [2/8] DEEP SCAN - DISM /ScanHealth
-echo ============================================================
+echo =============================================================
 DISM /Online /Cleanup-Image /ScanHealth
-IF %ERRORLEVEL% NEQ 0 (
-    echo ⚠ Issues may exist. Proceeding to repair...
-)
 
+:: ---------[ 3. DISM - RestoreHealth ]---------
 echo.
-echo ============================================================
+echo =============================================================
 echo [3/8] IMAGE REPAIR - DISM /RestoreHealth
-echo ============================================================
+echo =============================================================
 DISM /Online /Cleanup-Image /RestoreHealth
-IF %ERRORLEVEL% EQU 0 (
-    echo ✔ Windows image repaired successfully.
-) ELSE (
-    echo ⚠ Some issues could not be fixed automatically.
-)
 
+:: ---------[ 4. SFC - System File Check ]---------
 echo.
-echo ============================================================
+echo =============================================================
 echo [4/8] SYSTEM FILE CHECK - SFC /scannow
-echo ============================================================
+echo =============================================================
 SFC /scannow
-IF %ERRORLEVEL% EQU 0 (
-    echo ✔ SFC completed. No integrity violations found.
-) ELSE (
-    echo ⚠ SFC found and attempted to fix system file issues.
-)
 
+:: ---------[ 5. Stop Update Services ]---------
 echo.
-echo ============================================================
+echo =============================================================
 echo [5/8] STOPPING Windows Update Services
-echo ============================================================
+echo =============================================================
 net stop wuauserv >nul 2>&1
 net stop bits >nul 2>&1
 
+:: ---------[ 6. Delete Update Temp Files ]---------
 echo.
-echo ============================================================
+echo =============================================================
 echo [6/8] DELETING Update Temp Files
-echo ============================================================
+echo =============================================================
 rd /s /q %windir%\SoftwareDistribution\Download
 rd /s /q %windir%\SoftwareDistribution\DataStore
 
+:: ---------[ 7. Restart Update Services ]---------
 echo.
-echo ============================================================
+echo =============================================================
 echo [7/8] RESTARTING Windows Update Services
-echo ============================================================
+echo =============================================================
 net start wuauserv >nul 2>&1
 net start bits >nul 2>&1
 
+:: ---------[ 8. Disk Cleanup ]---------
 echo.
-echo ============================================================
-echo [8/8] FINAL CLEANUP - Disk Cleanup (Silent Mode)
-echo ============================================================
+echo =============================================================
+echo [8/8] FINAL CLEANUP - Disk Cleanup (Silent)
+echo =============================================================
 cleanmgr /sageset:123 >nul
 timeout /t 3 >nul
 cleanmgr /sagerun:123 >nul
 
 echo.
-echo ✅ All maintenance tasks completed successfully!
+echo =============================================================
+echo ✅ All tasks completed successfully. Your system is now clean.
+echo =============================================================
 pause
 exit
