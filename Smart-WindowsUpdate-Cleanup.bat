@@ -11,6 +11,20 @@ cls
 :: Version       : 1.0
 :: -------------------------------------------------------------------
 
+:: ---------[ Header Information ]---------
+echo =============================================================
+echo        SMART WINDOWS UPDATE & SYSTEM HEALTH CLEANUP
+echo =============================================================
+echo  Script Name : Smart-WindowsUpdate-Cleanup.bat
+echo  Author      : Abu Salah Musha Lemon
+echo  Created     : August 1, 2025
+echo  Version     : 1.0
+echo  Description : This script repairs Windows image, checks system
+echo                file integrity, clears Windows Update cache,
+echo                and runs disk cleanup silently.
+echo =============================================================
+echo.
+
 :: ---------[ Admin Rights Check ]---------
 NET SESSION >nul 2>&1
 IF %ERRORLEVEL% NEQ 0 (
