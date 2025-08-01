@@ -1,5 +1,5 @@
 @echo off
-    echo Smart Windows Update & System Health Cleanup
+     Smart Windows Update & System Health Cleanup
 cls
 
 :: -------------------------------------------------------------------
