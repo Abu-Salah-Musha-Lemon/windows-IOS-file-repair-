@@ -1,116 +1,113 @@
 @echo off
-:: ============================================================================
-:: FILE        : System Audit Only.bat
+:: ====================================================================
+:: FILE        : System_Audit.bat
 :: AUTHOR      : Abu Salah Musha Lemon
 :: DATE        : 16 February 2026
-:: VERSION     : 1.0
-:: DESCRIPTION : Collects full system audit report including:
-::               - OS Name & Version
-::               - CPU, RAM, GPU
-::               - Motherboard
-::               - Storage Drives
-::               - Network Adapters
-::               - BIOS / UEFI
-::               - Monitor Information
-::               - Security Information (Firewall, Defender, Secure Boot, TPM)
-:: USAGE       : Run as Administrator
-:: ============================================================================
+:: VERSION     : 2.1
+:: DESCRIPTION : Full System Audit Report 
+:: ====================================================================
 cls
 title Full System Audit Tool
 color 0A
 
-:: Set report path
-set Report=%USERPROFILE%\Desktop\Full_System_Audit_Report.txt
+:: ------------------------------
+:: Set report file
+:: ------------------------------
+set "Report=%USERPROFILE%\Desktop\Full_System_Audit_Report.txt"
 
-echo ========================================= > "%Report%"
-echo Full System Audit Report - %date% %time% >> "%Report%"
-echo ========================================= >> "%Report%"
-echo. >> "%Report%"
+:: ------------------------------
+:: Create header in UTF-8
+:: ------------------------------
+powershell -NoProfile -Command ^
+"$Report = '%Report%'; ^
+Set-Content -LiteralPath $Report -Value ('=========================================' + [Environment]::NewLine + 'Full System Audit Report - ' + (Get-Date) + [Environment]::NewLine + '=========================================') -Encoding UTF8"
 
 :: ==============================
 :: OS Information
 :: ==============================
-echo [OS Information] >> "%Report%"
-systeminfo | findstr /B /C:"OS Name" /C:"OS Version" >> "%Report%"
-echo. >> "%Report%"
+powershell -Command "Add-Content -LiteralPath '%Report%' -Value '[OS Information]'"
+powershell -Command "Get-CimInstance Win32_OperatingSystem | Select-Object Caption, Version | Format-List | Out-String | Add-Content -LiteralPath '%Report%'"
 
 :: ==============================
 :: CPU Information
 :: ==============================
-echo [CPU Information] >> "%Report%"
-wmic cpu get Name,NumberOfCores,NumberOfLogicalProcessors,MaxClockSpeed /format:list >> "%Report%"
-echo. >> "%Report%"
+powershell -Command "Add-Content -LiteralPath '%Report%' -Value '[CPU Information]'"
+powershell -Command "Get-CimInstance Win32_Processor | Select-Object Name, NumberOfCores, NumberOfLogicalProcessors, MaxClockSpeed | Format-List | Out-String | Add-Content -LiteralPath '%Report%'"
 
 :: ==============================
 :: RAM Information
 :: ==============================
-echo [RAM Information] >> "%Report%"
-wmic memorychip get BankLabel, Capacity, Speed, Manufacturer /format:list >> "%Report%"
-for /f "tokens=2 delims==" %%a in ('wmic computersystem get TotalPhysicalMemory /value') do set TotalRAM=%%a
-set /a TotalRAMMB=%TotalRAM:~0,-6%
-echo Total RAM: %TotalRAMMB% MB >> "%Report%"
-echo. >> "%Report%"
+powershell -Command "Add-Content -LiteralPath '%Report%' -Value '[RAM Information]'"
+powershell -Command "Get-CimInstance Win32_PhysicalMemory | Select-Object BankLabel, Manufacturer, Capacity, Speed | Format-List | Out-String | Add-Content -LiteralPath '%Report%'"
+powershell -Command ^
+"$TotalRAM = (Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory / (1024*1024); ^
+Add-Content -LiteralPath '%Report%' -Value ('Total RAM: {0:N0} MB' -f $TotalRAM)"
 
 :: ==============================
 :: GPU Information
 :: ==============================
-echo [GPU Information] >> "%Report%"
-wmic path win32_VideoController get Name,AdapterRAM,DriverVersion /format:list >> "%Report%"
-echo. >> "%Report%"
+powershell -Command "Add-Content -LiteralPath '%Report%' -Value '[GPU Information]'"
+powershell -Command "Get-CimInstance Win32_VideoController | Select-Object Name, AdapterRAM, DriverVersion | Format-List | Out-String | Add-Content -LiteralPath '%Report%'"
 
 :: ==============================
 :: Motherboard
 :: ==============================
-echo [Motherboard] >> "%Report%"
-wmic baseboard get Product,Manufacturer,SerialNumber /format:list >> "%Report%"
-echo. >> "%Report%"
+powershell -Command "Add-Content -LiteralPath '%Report%' -Value '[Motherboard]'"
+powershell -Command "Get-CimInstance Win32_BaseBoard | Select-Object Product, Manufacturer, SerialNumber | Format-List | Out-String | Add-Content -LiteralPath '%Report%'"
 
 :: ==============================
 :: Storage Drives
 :: ==============================
-echo [Storage Drives] >> "%Report%"
-wmic diskdrive get Model,Size,MediaType,Status /format:list >> "%Report%"
-echo. >> "%Report%"
+powershell -Command "Add-Content -LiteralPath '%Report%' -Value '[Storage Drives]'"
+powershell -Command "Get-CimInstance Win32_DiskDrive | Select-Object Model, MediaType, Size, Status | Format-List | Out-String | Add-Content -LiteralPath '%Report%'"
 
 :: ==============================
 :: Network Adapters
 :: ==============================
-echo [Network Adapters] >> "%Report%"
-wmic nic where "NetEnabled=true" get Name,MACAddress,Speed /format:list >> "%Report%"
-echo. >> "%Report%"
+powershell -Command "Add-Content -LiteralPath '%Report%' -Value '[Network Adapters]'"
+powershell -Command "Get-CimInstance Win32_NetworkAdapter | Where-Object {$_.NetEnabled -eq $true} | Select-Object Name, MACAddress, Speed | Format-List | Out-String | Add-Content -LiteralPath '%Report%'"
 
 :: ==============================
 :: BIOS / UEFI
 :: ==============================
-echo [BIOS / UEFI Information] >> "%Report%"
-wmic bios get Manufacturer,SMBIOSBIOSVersion,ReleaseDate /format:list >> "%Report%"
-echo. >> "%Report%"
+powershell -Command "Add-Content -LiteralPath '%Report%' -Value '[BIOS / UEFI Information]'"
+powershell -Command "Get-CimInstance Win32_BIOS | Select-Object Manufacturer, SMBIOSBIOSVersion, ReleaseDate | Format-List | Out-String | Add-Content -LiteralPath '%Report%'"
 
 :: ==============================
 :: Monitor Information
 :: ==============================
-echo [Monitor Information] >> "%Report%"
-wmic desktopmonitor get Name,ScreenHeight,ScreenWidth,MonitorType /format:list >> "%Report%"
-echo. >> "%Report%"
+powershell -Command "Add-Content -LiteralPath '%Report%' -Value '[Monitor Information]'"
+powershell -Command "Get-CimInstance Win32_VideoController | Select-Object Name, CurrentHorizontalResolution, CurrentVerticalResolution | Format-List | Out-String | Add-Content -LiteralPath '%Report%'"
 
 :: ==============================
 :: Security Information
 :: ==============================
-echo [Security Information] >> "%Report%"
-netsh advfirewall show allprofiles state >> "%Report%"
-powershell -Command "Get-MpComputerStatus | Select AntivirusEnabled, RealTimeProtectionEnabled, AntivirusSignatureLastUpdated | Format-List" >> "%Report%"
-powershell -Command "Confirm-SecureBootUEFI" >> "%Report%"
-powershell -Command "Get-Tpm | Format-List" >> "%Report%"
-echo. >> "%Report%"
+powershell -Command "Add-Content -LiteralPath '%Report%' -Value '[Security Information]'"
+powershell -Command "netsh advfirewall show allprofiles state | Out-String | Add-Content -LiteralPath '%Report%'"
+
+:: Windows Defender (if installed)
+powershell -Command ^
+"if (Get-Command 'Get-MpComputerStatus' -ErrorAction SilentlyContinue) { ^
+    Get-MpComputerStatus | Select-Object AntivirusEnabled, RealTimeProtectionEnabled, AntivirusSignatureLastUpdated | Format-List | Out-String | Add-Content -LiteralPath '%Report%' ^
+} else { Add-Content -LiteralPath '%Report%' 'Windows Defender not installed or unavailable.' }"
+
+:: Secure Boot
+powershell -Command ^
+"try { Confirm-SecureBootUEFI | Out-String | Add-Content -LiteralPath '%Report%' } ^
+catch { Add-Content -LiteralPath '%Report%' -Value 'Secure Boot not supported on this system.' }"
+
+:: TPM
+powershell -Command ^
+"if (Get-Command 'Get-Tpm' -ErrorAction SilentlyContinue) { Get-Tpm | Format-List | Out-String | Add-Content -LiteralPath '%Report%' } ^
+else { Add-Content -LiteralPath '%Report%' -Value 'TPM not available.' }"
 
 :: ==============================
-echo ========================================= >> "%Report%"
-echo System Audit Completed! >> "%Report%"
-echo Report saved to Desktop as Full_System_Audit_Report.txt >> "%Report%"
-echo ========================================= >> "%Report%"
+:: Done
+:: ==============================
+powershell -Command "Add-Content -LiteralPath '%Report%' -Value '=========================================`nSystem Audit Completed!`nReport saved to Desktop as Full_System_Audit_Report.txt`n========================================='"
 
 echo.
-echo System Audit Completed!
+echo Full System Audit Completed!
 echo Report saved to Desktop:
 echo %Report%
 pause
