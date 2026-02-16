@@ -34,7 +34,7 @@ echo.
 :: --------------------------- Admin Privileges Check ------------------------
 NET SESSION >nul 2>&1
 IF %ERRORLEVEL% NEQ 0 (
-    echo ❌ This script must be run as Administrator.
+    echo This script must be run as Administrator.
     pause
     exit /b
 )
@@ -90,7 +90,7 @@ echo.
 
 :: --------------------------- End of Script ---------------------------------
 echo ============================================================================
-echo ✅ All tasks completed successfully.
+echo All tasks completed successfully.
 echo You may now close this window or restart your PC if prompted.
 echo ============================================================================
 pause
