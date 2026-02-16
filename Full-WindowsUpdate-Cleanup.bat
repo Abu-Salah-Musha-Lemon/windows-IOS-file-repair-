@@ -53,6 +53,6 @@ timeout /t 3 >nul
 cleanmgr /sagerun:123 >nul
 
 echo ========================================
-echo ✅ All maintenance tasks completed!
+echo All maintenance tasks completed!
 pause
 exit
