@@ -1,0 +1,37 @@
+@echo off
+title TECHNICIAN WINDOWS REPAIR TOOL
+color 0C
+
+echo ==== Stopping Critical Services ====
+net stop wuauserv >nul 2>&1
+net stop bits >nul 2>&1
+net stop cryptsvc >nul 2>&1
+net stop msiserver >nul 2>&1
+
+echo ==== Resetting Windows Update Components ====
+rd /s /q %windir%\SoftwareDistribution >nul 2>&1
+rd /s /q %windir%\System32\catroot2 >nul 2>&1
+
+echo ==== Re-registering System Files ====
+regsvr32 /s wuapi.dll
+regsvr32 /s wuaueng.dll
+regsvr32 /s wucltux.dll
+regsvr32 /s wups.dll
+regsvr32 /s wups2.dll
+regsvr32 /s wuwebv.dll
+
+echo ==== Restarting Services ====
+net start wuauserv
+net start bits
+net start cryptsvc
+net start msiserver
+
+echo ==== Running System Repair ====
+sfc /scannow
+DISM /Online /Cleanup-Image /RestoreHealth
+
+echo ==== Checking Disk ====
+chkdsk C: /f
+
+echo ==== Finished - Restart Required ====
+pause
