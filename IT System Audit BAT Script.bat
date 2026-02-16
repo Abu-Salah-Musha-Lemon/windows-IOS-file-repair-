@@ -1,25 +1,49 @@
 @echo off
-title System Audit
+:: ============================================================================
+:: FILE        : System Audit Only.bat
+:: AUTHOR      : Abu Salah Musha Lemon
+:: DATE        : 16 February 2026
+:: VERSION     : 1.0
+:: DESCRIPTION : Collects full system audit report including:
+::               - OS Name & Version
+::               - CPU, RAM, GPU
+::               - Motherboard
+::               - Storage Drives
+::               - Network Adapters
+::               - BIOS / UEFI
+::               - Monitor Information
+::               - Security Information (Firewall, Defender, Secure Boot, TPM)
+:: USAGE       : Run as Administrator
+:: ============================================================================
+cls
+title Full System Audit Tool
 color 0A
 
-set Report=%USERPROFILE%\Desktop\Client_System_Report.txt
+:: Set report path
+set Report=%USERPROFILE%\Desktop\Full_System_Audit_Report.txt
 
 echo ========================================= > "%Report%"
-echo System Audit Report - %date% %time% >> "%Report%"
+echo Full System Audit Report - %date% %time% >> "%Report%"
 echo ========================================= >> "%Report%"
 echo. >> "%Report%"
 
-:: OS Info
+:: ==============================
+:: OS Information
+:: ==============================
 echo [OS Information] >> "%Report%"
 systeminfo | findstr /B /C:"OS Name" /C:"OS Version" >> "%Report%"
 echo. >> "%Report%"
 
-:: CPU Info
+:: ==============================
+:: CPU Information
+:: ==============================
 echo [CPU Information] >> "%Report%"
 wmic cpu get Name,NumberOfCores,NumberOfLogicalProcessors,MaxClockSpeed /format:list >> "%Report%"
 echo. >> "%Report%"
 
-:: RAM Info
+:: ==============================
+:: RAM Information
+:: ==============================
 echo [RAM Information] >> "%Report%"
 wmic memorychip get BankLabel, Capacity, Speed, Manufacturer /format:list >> "%Report%"
 for /f "tokens=2 delims==" %%a in ('wmic computersystem get TotalPhysicalMemory /value') do set TotalRAM=%%a
@@ -27,51 +51,66 @@ set /a TotalRAMMB=%TotalRAM:~0,-6%
 echo Total RAM: %TotalRAMMB% MB >> "%Report%"
 echo. >> "%Report%"
 
-:: GPU Info
+:: ==============================
+:: GPU Information
+:: ==============================
 echo [GPU Information] >> "%Report%"
 wmic path win32_VideoController get Name,AdapterRAM,DriverVersion /format:list >> "%Report%"
 echo. >> "%Report%"
 
+:: ==============================
 :: Motherboard
+:: ==============================
 echo [Motherboard] >> "%Report%"
 wmic baseboard get Product,Manufacturer,SerialNumber /format:list >> "%Report%"
 echo. >> "%Report%"
 
+:: ==============================
 :: Storage Drives
+:: ==============================
 echo [Storage Drives] >> "%Report%"
 wmic diskdrive get Model,Size,MediaType,Status /format:list >> "%Report%"
 echo. >> "%Report%"
 
+:: ==============================
 :: Network Adapters
+:: ==============================
 echo [Network Adapters] >> "%Report%"
 wmic nic where "NetEnabled=true" get Name,MACAddress,Speed /format:list >> "%Report%"
 echo. >> "%Report%"
 
-:: BIOS
-echo [BIOS Information] >> "%Report%"
+:: ==============================
+:: BIOS / UEFI
+:: ==============================
+echo [BIOS / UEFI Information] >> "%Report%"
 wmic bios get Manufacturer,SMBIOSBIOSVersion,ReleaseDate /format:list >> "%Report%"
 echo. >> "%Report%"
 
-:: Monitor
+:: ==============================
+:: Monitor Information
+:: ==============================
 echo [Monitor Information] >> "%Report%"
 wmic desktopmonitor get Name,ScreenHeight,ScreenWidth,MonitorType /format:list >> "%Report%"
 echo. >> "%Report%"
 
-:: Security Info
+:: ==============================
+:: Security Information
+:: ==============================
 echo [Security Information] >> "%Report%"
-:: Firewall Status
 netsh advfirewall show allprofiles state >> "%Report%"
-:: Defender Status
 powershell -Command "Get-MpComputerStatus | Select AntivirusEnabled, RealTimeProtectionEnabled, AntivirusSignatureLastUpdated | Format-List" >> "%Report%"
-:: Secure Boot
 powershell -Command "Confirm-SecureBootUEFI" >> "%Report%"
+powershell -Command "Get-Tpm | Format-List" >> "%Report%"
 echo. >> "%Report%"
 
+:: ==============================
 echo ========================================= >> "%Report%"
-echo Audit Complete! Report saved to Desktop as Client_System_Report.txt >> "%Report%"
+echo System Audit Completed! >> "%Report%"
+echo Report saved to Desktop as Full_System_Audit_Report.txt >> "%Report%"
 echo ========================================= >> "%Report%"
 
 echo.
-echo Audit completed! Report saved to Desktop:
+echo System Audit Completed!
+echo Report saved to Desktop:
 echo %Report%
 pause
