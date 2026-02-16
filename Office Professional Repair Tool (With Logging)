@@ -1,0 +1,50 @@
+@echo off
+title OFFICE PROFESSIONAL REPAIR TOOL (LOGGING)
+color 0A
+
+set LOGFILE=%USERPROFILE%\Desktop\Office_Repair_Report.txt
+
+echo ========================================== >> %LOGFILE%
+echo Office Repair Started: %date% %time% >> %LOGFILE%
+echo ========================================== >> %LOGFILE%
+
+echo Creating Restore Point...
+powershell -Command "Checkpoint-Computer -Description 'OfficeRepairPoint' -RestorePointType 'MODIFY_SETTINGS'" >> %LOGFILE% 2>&1
+
+echo Running System File Check...
+sfc /scannow >> %LOGFILE% 2>&1
+
+echo Running DISM ScanHealth...
+DISM /Online /Cleanup-Image /ScanHealth >> %LOGFILE% 2>&1
+
+echo Running DISM RestoreHealth...
+DISM /Online /Cleanup-Image /RestoreHealth >> %LOGFILE% 2>&1
+
+echo Running CHKDSK Scan...
+chkdsk C: /scan >> %LOGFILE% 2>&1
+
+echo Cleaning Temp Files...
+del /s /q %temp%\* >> %LOGFILE% 2>&1
+del /s /q C:\Windows\Temp\* >> %LOGFILE% 2>&1
+
+echo Clearing Windows Update Download Cache...
+net stop wuauserv >> %LOGFILE% 2>&1
+del /s /q %windir%\SoftwareDistribution\Download\* >> %LOGFILE% 2>&1
+net start wuauserv >> %LOGFILE% 2>&1
+
+echo Flushing DNS...
+ipconfig /flushdns >> %LOGFILE% 2>&1
+
+echo Running Disk Cleanup...
+cleanmgr /verylowdisk >> %LOGFILE% 2>&1
+
+echo ========================================== >> %LOGFILE%
+echo Repair Completed: %date% %time% >> %LOGFILE%
+echo ========================================== >> %LOGFILE%
+
+echo.
+echo Repair Completed.
+echo Log file saved to Desktop as:
+echo Office_Repair_Report.txt
+echo.
+pause
