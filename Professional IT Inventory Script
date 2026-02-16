@@ -1,0 +1,62 @@
+Clear-Host
+
+# File paths
+$Date = Get-Date -Format "yyyy-MM-dd_HH-mm"
+$TxtReport = "$env:USERPROFILE\Desktop\Client_System_Report_$Date.txt"
+$CsvReport = "$env:USERPROFILE\Desktop\Client_System_Report_$Date.csv"
+$PdfReport = "$env:USERPROFILE\Desktop\Client_System_Report_$Date.pdf"
+
+# Collect system info
+$SystemInfo = [PSCustomObject]@{
+    "ComputerName" = $env:COMPUTERNAME
+    "UserName" = $env:USERNAME
+    "OS" = (Get-ComputerInfo).WindowsProductName
+    "OSVersion" = (Get-ComputerInfo).WindowsVersion
+    "OSBuild" = (Get-ComputerInfo).OsBuildNumber
+    "Architecture" = (Get-ComputerInfo).OsArchitecture
+    "BIOS_Manufacturer" = (Get-CimInstance Win32_BIOS).Manufacturer
+    "BIOS_Version" = (Get-CimInstance Win32_BIOS).SMBIOSBIOSVersion
+    "Motherboard" = (Get-CimInstance Win32_BaseBoard).Product
+    "CPU" = (Get-CimInstance Win32_Processor).Name
+    "CPU_Cores" = (Get-CimInstance Win32_Processor).NumberOfCores
+    "CPU_Threads" = (Get-CimInstance Win32_Processor).NumberOfLogicalProcessors
+    "RAM_GB" = [math]::Round(((Get-CimInstance Win32_PhysicalMemory | Measure-Object Capacity -Sum).Sum / 1GB),2)
+    "GPU" = (Get-CimInstance Win32_VideoController).Name
+    "Storage" = ((Get-PhysicalDisk | ForEach-Object {"$($_.FriendlyName): $([math]::Round($_.Size/1GB,2)) GB"}) -join ", ")
+    "NetworkAdapters" = ((Get-NetAdapter | Where-Object {$_.Status -eq "Up"}).Name -join ", ")
+    "Monitor" = ((Get-CimInstance -Namespace root\wmi -ClassName WmiMonitorBasicDisplayParams | ForEach-Object {"$($_.InstanceName) $($_.MaxHorizontalImageSize)x$($_.MaxVerticalImageSize)cm"}) -join ", ")
+    "TPM" = (Get-Tpm).TpmPresent
+    "SecureBoot" = Confirm-SecureBootUEFI
+    "AntivirusEnabled" = (Get-MpComputerStatus).AntivirusEnabled
+    "RealTimeProtection" = (Get-MpComputerStatus).RealTimeProtectionEnabled
+    "Firewall" = ((Get-NetFirewallProfile | Where-Object {$_.Enabled -eq "True"}).Name -join ", ")
+}
+
+# ----------------------
+# TXT REPORT
+# ----------------------
+"Client System Inventory - $Date" | Out-File $TxtReport
+$SystemInfo | Format-List | Out-File $TxtReport -Append
+
+# ----------------------
+# CSV REPORT
+# ----------------------
+$SystemInfo | Export-Csv $CsvReport -NoTypeInformation
+
+# ----------------------
+# PDF REPORT
+# ----------------------
+# Load module
+Import-Module PSWritePDF
+
+$pdf = New-PDF -FilePath $PdfReport
+Add-PDFText -PDF $pdf -Text "Client System Inventory Report - $Date" -FontSize 16 -Bold
+Add-PDFText -PDF $pdf -Text ($SystemInfo | Format-List | Out-String) -FontSize 10
+Close-PDF $pdf
+
+# ----------------------
+Write-Host ""
+Write-Host "System Inventory Completed!"
+Write-Host "TXT Report: $TxtReport"
+Write-Host "CSV Report: $CsvReport"
+Write-Host "PDF Report: $PdfReport"
