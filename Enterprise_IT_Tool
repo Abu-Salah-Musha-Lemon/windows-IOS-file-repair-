@@ -1,0 +1,92 @@
+Clear-Host
+$LogFile = "$env:USERPROFILE\Desktop\Enterprise_Repair_Report.txt"
+
+function Write-Log {
+    param($Message)
+    $Message | Tee-Object -FilePath $LogFile -Append
+}
+
+Write-Log "==============================================="
+Write-Log "Enterprise Repair Started: $(Get-Date)"
+Write-Log "==============================================="
+
+function Create-RestorePoint {
+    Write-Log "Creating Restore Point..."
+    Checkpoint-Computer -Description "EnterpriseRepairPoint" -RestorePointType MODIFY_SETTINGS
+}
+
+function Run-SystemRepair {
+    Write-Log "Running SFC..."
+    sfc /scannow | Out-File $LogFile -Append
+
+    Write-Log "Running DISM..."
+    DISM /Online /Cleanup-Image /RestoreHealth | Out-File $LogFile -Append
+}
+
+function Clean-TempFiles {
+    Write-Log "Cleaning Temp Files..."
+    Remove-Item "$env:TEMP\*" -Recurse -Force -ErrorAction SilentlyContinue
+}
+
+function Reset-WindowsUpdate {
+    Write-Log "Resetting Windows Update..."
+    Stop-Service wuauserv -Force
+    Remove-Item "C:\Windows\SoftwareDistribution\Download\*" -Recurse -Force -ErrorAction SilentlyContinue
+    Start-Service wuauserv
+}
+
+function Full-DefenderScan {
+    Write-Log "Updating Defender Signatures..."
+    Update-MpSignature
+
+    Write-Log "Running Full Malware Scan..."
+    Start-MpScan -ScanType FullScan
+}
+
+function Repair-Office {
+    Write-Log "Starting Microsoft Office Quick Repair..."
+    Start-Process "control.exe" -ArgumentList "appwiz.cpl"
+    Write-Host "Please select Microsoft Office → Change → Quick Repair"
+}
+
+function Email-Report {
+    Write-Log "Emailing Report..."
+    $smtpServer = "smtp.yourcompany.com"
+    $to = "admin@yourcompany.com"
+    $from = "pc@yourcompany.com"
+    $subject = "Enterprise Repair Report"
+    $body = Get-Content $LogFile | Out-String
+
+    Send-MailMessage -SmtpServer $smtpServer -To $to -From $from -Subject $subject -Body $body
+}
+
+do {
+    Write-Host ""
+    Write-Host "========= ENTERPRISE IT TOOL ========="
+    Write-Host "1. Create Restore Point"
+    Write-Host "2. Run System Repair (SFC + DISM)"
+    Write-Host "3. Clean Temp Files"
+    Write-Host "4. Reset Windows Update"
+    Write-Host "5. Full Malware Scan (Defender)"
+    Write-Host "6. Repair Microsoft Office"
+    Write-Host "7. Email Repair Report"
+    Write-Host "0. Exit"
+    Write-Host "======================================="
+    
+    $choice = Read-Host "Select an option"
+
+    switch ($choice) {
+        1 { Create-RestorePoint }
+        2 { Run-SystemRepair }
+        3 { Clean-TempFiles }
+        4 { Reset-WindowsUpdate }
+        5 { Full-DefenderScan }
+        6 { Repair-Office }
+        7 { Email-Report }
+        0 { break }
+        default { Write-Host "Invalid option." }
+    }
+
+} while ($choice -ne 0)
+
+Write-Log "Repair Session Ended: $(Get-Date)"
