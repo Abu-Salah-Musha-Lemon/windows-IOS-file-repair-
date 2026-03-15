@@ -12,7 +12,10 @@ DISM /Online /Cleanup-Image /ScanHealth
 DISM /Online /Cleanup-Image /RestoreHealth
 SFC /scannow
 ```
-
+ * *History :
+```
+ipconfig /displaydns
+```
 💡 These tools scan and repair system corruption and missing files. If errors are found, run the last one (SFC) a couple more times.
 
 ⚠ Pro Tip: If DISM has trouble repairing, you can use a Windows ISO file as a source for clean repair.
